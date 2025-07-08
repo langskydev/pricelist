@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { FaSearch, FaFilter, FaSortAmountUp, FaSortAmountDown, FaTag, FaStar, FaUsers, FaLock } from 'react-icons/fa';
+import { FaSearch, FaFilter, FaSortAmountUp, FaSortAmountDown, FaTag, FaStar, FaUsers, FaLock, FaChevronDown, FaChevronUp, FaWhatsapp, FaComments } from 'react-icons/fa';
 
 const PriceList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceFilter, setPriceFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [collapsedCards, setCollapsedCards] = useState(new Set());
 
   // Data produk dengan berbagai varian
   const products = [
@@ -135,6 +136,16 @@ const PriceList = () => {
       variants: [
         { type: '1 Bulan', price: 13000, description: 'Via invite', badge: 'Business' }
       ]
+    },
+    {
+      id: 13,
+      name: 'Capcut Pro',
+      category: 'edit',
+      icon: '🎬',
+      variants: [
+        { type: 'Private 1 Bulan', price: 20000, description: 'Akun dari admin garansi 1 bulan', badge: 'Best Value' },
+        { type: 'Private 1 Minggu', price: 7000, description: 'Akun dari admin garansi 1 Minggu', badge: 'Best Value' },
+      ]
     }
   ];
 
@@ -147,6 +158,17 @@ const PriceList = () => {
     { value: 'meeting', label: 'Meeting & Video Call', icon: '📞' },
     { value: 'office', label: 'Office & Productivity', icon: '💼' }
   ];
+
+  // Toggle collapse untuk card individual
+  const toggleCardCollapse = (productId) => {
+    const newCollapsedCards = new Set(collapsedCards);
+    if (newCollapsedCards.has(productId)) {
+      newCollapsedCards.delete(productId);
+    } else {
+      newCollapsedCards.add(productId);
+    }
+    setCollapsedCards(newCollapsedCards);
+  };
 
   // Filter dan sort produk
   const filteredProducts = useMemo(() => {
@@ -198,7 +220,7 @@ const PriceList = () => {
 
   // Get badge color
   const getBadgeColor = (badge) => {
-    switch(badge) {
+    switch (badge) {
       case 'Popular': return 'bg-blue-500 text-white';
       case 'Premium': return 'bg-purple-500 text-white';
       case 'Best Deal': return 'bg-green-500 text-white';
@@ -321,49 +343,63 @@ const PriceList = () => {
                         </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm opacity-90">Mulai dari</p>
-                      <p className="text-2xl font-bold">
-                        {formatPrice(Math.min(...product.variants.map(v => v.price)))}
-                      </p>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <p className="text-sm opacity-90">Mulai dari</p>
+                        <p className="text-2xl font-bold">
+                          {formatPrice(Math.min(...product.variants.map(v => v.price)))}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => toggleCardCollapse(product.id)}
+                        className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all"
+                      >
+                        {collapsedCards.has(product.id) ? (
+                          <FaChevronUp className="w-5 h-5" />
+                        ) : (
+                          <FaChevronDown className="w-5 h-5" />
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                {/* Variants Grid */}
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {product.variants.map((variant, variantIndex) => (
-                      <div key={variantIndex} className="relative bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-red-300 hover:shadow-md transition-all duration-200 group">
+                {/* Variants Grid - Collapsible */}
+                {collapsedCards.has(product.id) && (
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {product.variants.map((variant, variantIndex) => (
+                        <div key={variantIndex} className="relative bg-gray-50 rounded-xl p-4 border border-gray-200 hover:border-red-300 hover:shadow-md transition-all duration-200 group">
 
-                        {/* Badge */}
-                        {variant.badge && (
-                          <div className={`absolute -top-2 -right-2 px-2 py-1 rounded-full text-xs font-bold ${getBadgeColor(variant.badge)} shadow-md`}>
-                            {variant.badge}
+                          {/* Badge */}
+                          {variant.badge && (
+                            <div className={`absolute -top-2 -right-2 px-2 py-1 rounded-full text-xs font-bold ${getBadgeColor(variant.badge)} shadow-md`}>
+                              {variant.badge}
+                            </div>
+                          )}
+
+                          {/* Variant Header */}
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-2">
+                              {getVariantIcon(variant.type)}
+                              <span className="font-semibold text-gray-800">{variant.type}</span>
+                            </div>
                           </div>
-                        )}
 
-                        {/* Variant Header */}
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center space-x-2">
-                            {getVariantIcon(variant.type)}
-                            <span className="font-semibold text-gray-800">{variant.type}</span>
+                          {/* Price */}
+                          <div className="mb-3">
+                            <span className="text-2xl font-bold text-red-600">{formatPrice(variant.price)}</span>
                           </div>
-                        </div>
 
-                        {/* Price */}
-                        <div className="mb-3">
-                          <span className="text-2xl font-bold text-red-600">{formatPrice(variant.price)}</span>
+                          {/* Description */}
+                          <p className="text-sm text-gray-600 line-clamp-2">
+                            {variant.description}
+                          </p>
                         </div>
-
-                        {/* Description */}
-                        <p className="text-sm text-gray-600 line-clamp-2">
-                          {variant.description}
-                        </p>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ))
           )}
@@ -433,6 +469,88 @@ const PriceList = () => {
               ))}
             </div>
           </div>
+
+          {/* WhatsApp Links Section */}
+          <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-2xl p-8 border border-green-200">
+            <h3 className="text-2xl font-bold text-green-900 mb-6 flex items-center">
+              <FaWhatsapp className="mr-3" />
+              Bergabung dengan Komunitas Kami
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+              {/* WhatsApp Group */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:shadow-lg transition-all duration-300 group">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-green-500 rounded-full">
+                      <FaUsers className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-green-900">WhatsApp Group</h4>
+                      <p className="text-green-700">Diskusi & Info Promo</p>
+                    </div>
+                  </div>
+                  <div className="text-3xl group-hover:scale-110 transition-transform">💬</div>
+                </div>
+                <p className="text-green-600 mb-4">
+                  Bergabunglah dengan grup WhatsApp kami untuk mendapatkan update terbaru, promo eksklusif, dan berbagi pengalaman dengan member lain.
+                </p>
+                <a
+                  href="https://chat.whatsapp.com/I3LJQUxgxZy8Qfs4S6dD3H?mode=ac_c"
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg hover:shadow-xl group"
+                >
+                  <FaWhatsapp className="mr-2 group-hover:scale-110 transition-transform" />
+                  Gabung Grup
+                </a>
+              </div>
+
+              {/* WhatsApp Channel */}
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:shadow-lg transition-all duration-300 group">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-blue-500 rounded-full">
+                      <FaComments className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-blue-900">WhatsApp Channel</h4>
+                      <p className="text-blue-700">Update & Pengumuman</p>
+                    </div>
+                  </div>
+                  <div className="text-3xl group-hover:scale-110 transition-transform">📢</div>
+                </div>
+                <p className="text-blue-600 mb-4">
+                  Ikuti channel WhatsApp kami untuk mendapatkan update produk terbaru, perubahan harga, dan pengumuman penting lainnya.
+                </p>
+                <a
+                  href="https://whatsapp.com/channel/0029Vas6KV1BqbrA3oyIC220"
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl group"
+                >
+                  <FaWhatsapp className="mr-2 group-hover:scale-110 transition-transform" />
+                  Ikuti Channel
+                </a>
+              </div>
+            </div>
+
+            {/* Benefits Section */}
+            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { icon: '⚡', title: 'Transaksi Kilat', desc: 'Proses pesanan cepat, tanpa ribet!' },
+                { icon: '🛡️', title: 'Aman & Terpercaya', desc: 'Kami menjamin keamanan akun dan pembayaran Anda.' },
+                { icon: '📞', title: 'Support Fast Respon', desc: 'Admin aktif dan siap bantu kapan pun Anda butuh.' },
+                { icon: '💸', title: 'Harga Terjangkau', desc: 'Produk premium dengan harga ramah kantong.' },
+                { icon: '🔄', title: 'Garansi & Replace', desc: 'Jika akun bermasalah dalam masa garansi, langsung diganti.' },
+                { icon: '📊', title: 'Varian Lengkap', desc: 'Tersedia banyak pilihan sesuai kebutuhan Anda.' }
+              ].map((benefit, index) => (
+                <div key={index} className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:shadow-md transition-all flex items-start space-x-4">
+                  <span className="text-3xl">{benefit.icon}</span>
+                  <div>
+                    <h4 className="font-bold text-red-900">{benefit.title}</h4>
+                    <p className="text-sm text-red-700 mt-1">{benefit.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
       </div>
@@ -441,3 +559,4 @@ const PriceList = () => {
 };
 
 export default PriceList;
+
